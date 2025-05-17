@@ -14,11 +14,11 @@
     },
     {
       "name": "counter_title",
-      "value": "计数器"
+      "value": "Counter"
     },
     {
       "name": "counter_tips",
-      "value": "下面是你点击按钮的次数:"
+      "value": "You have pushed the button this many times:"
     }
   ]
 }

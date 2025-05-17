@@ -1,118 +1,83 @@
+import { MenuMeta, MyBottomAppBar } from "../components /MyBottomAppBar";
+import { CounterPage } from "./counter/CounterPage";
+import { GuessingPage } from "./guessing/view/GuessingPage";
+import { TestRelativeContainer } from "./relativeContainer/TestRelativeContainer";
+
+
+export const kTabs: MenuMeta[] = [
+  {
+    title: '计数器',
+    icon: $r('app.media.bar_counter'),
+  },
+  {
+    title: '猜数字',
+    icon: $r('app.media.bar_guess'),
+  },
+  {
+    title: '电子木鱼',
+    icon: $r('app.media.bar_muyu'),
+  },
+  {
+    title: '画板',
+    icon: $r('app.media.bar_painter'),
+  },
+]
+
 @Entry
 @Component
-@Preview
 struct Index {
-  //组件内部可以通过 @State 声明可变状态量
-  @State message: string = '鸿蒙纪元试试';
-  @State counter: number = 0;
+  //获取 sp 的值 是底部导航栏的高度
+  @StorageProp('bottomRectHeight')
+  bottomRectHeight: number = 0;
+  //1. 数据共享机制
+  // @Provide 用于在父组件中声明可以被子组件共享的数据
+  // 子组件可以通过 @Consume 装饰器来访问这些共享数据
+  // 实现了跨层级的数据传递，无需通过属性层层传递
+  @Provide('NavPathStack') pageStack: NavPathStack = new NavPathStack()
+  //2. 状态管理机制
+  @State currentIndex: number = 0;
 
-  build() {
-    Stack() {
-      //
-      Column() {
-        // Text('计数器')
-        //   .fontSize(28)
-        //   .fontWeight(FontWeight.Bold)
-        //   .margin({ top: 20, left: 20 })
-
-
-        //在 AppBar 构造时，可以通过 leading 参数，让外界构建具体内容，
-        // 插入到 AppBar 结构的内部。通过这种方式，我们就可以封装一些通用的结构，便于复用：
-        AppBar({ title: '计数器', leading: this.leading, tailing: this.tailing });
-        Column() {
-          Text('～～～下面是你点击按钮的次数:')
-            .fontSize(18)
-          Text(this.counter.toString())
-            .fontSize(36)
-            .fontColor('#2e3032')
-            .margin({ top: 10 })
-        }
-        .width('100%')
-        .height('100%')
-        .justifyContent(FlexAlign.Center) //主轴对齐
+  @Builder
+  tabview() {
+    Tabs({ index: this.currentIndex }) {
+      TabContent() {
+        CounterPage()
       }
-      .alignItems(HorizontalAlign.Start) //交叉轴对齐
-      .width('100%')
-      .height('100%')
+
+      TabContent() {
+        GuessingPage()
+      }
+
+      TabContent() {
+        TestRelativeContainer()
+      }
 
       //
-      Text(this.message)
-        .fontSize(28)
-        .fontWeight(FontWeight.Bold)
-        .margin({ right: 20, bottom: 166 })
-
-      //
-      //stateEffect 为 true 时，点击可以有颜色加深的反馈效果。
-      Button({ type: ButtonType.Circle, stateEffect: true }) {
-        SymbolGlyph($r('sys.symbol.plus'))
-          .fontSize(24)
-          .fontColor([Color.White])
-          .fontWeight(FontWeight.Bold)
-          .margin({ top: 10, bottom: 10 })
-          .onClick(() => {
-            this.message = '点击了' + this.counter + '次';
-            this.counter++;
-          })
-      }.width(56).height(56)
-      .margin({ right: 20, bottom: 20 })
-      .backgroundColor('#317bd4')
-
-    }.alignContent(Alignment.Bottom)
-
+      // TabContent() {
+      //   Painter()
+      // }
+    }.layoutWeight(1)
+    .barHeight(0)
+    .scrollable(false)
   }
-
-  //@Builder - 自定义组件模板
-  @Builder
-  leading() {
-    SymbolGlyph($r('sys.symbol.access_card'))
-      .fontSize(24).fontColor([Color.White])
-      .fontWeight(FontWeight.Bold)
-  }
-
-  @Builder
-  tailing() {
-    SymbolGlyph($r('sys.symbol.card_package'))
-      .fontSize(24).fontColor([Color.White])
-      .fontWeight(FontWeight.Bold)
-  }
-}
-
-// 你做了个空白相框(@BuilderParam)
-// 别人可以把自己拍的照片(@Builder)放进去
-// 相框只负责边框，照片内容别人决定
-@Component
-struct AppBar {
-  title: string = '';
-
-  @Builder
-  leadingBuilder() {
-  }
-
-  //@Builder - 自定义组件模板
-  @Builder
-  tailingBuilder() {
-
-  }
-
-  //@BuilderParam - 组件插槽
-  @BuilderParam leading: () => void = this.leadingBuilder;
-  @BuilderParam tailing: () => void = this.tailingBuilder;
 
   build() {
-    Row() {
-      this.leading()
-      Text(this.title)
-        .fontSize(20).fontWeight(FontWeight.Bold)
-        .fontColor($r('sys.color.white'))
-      this.tailing()
+    Navigation(this.pageStack) {
+      Column() {
+        this.tabview()
+        MyBottomAppBar({
+          data: kTabs,
+          activeIndex: this.currentIndex,
+          onSelected: (index) => this.onPageChange(index)
+        })
+      }
     }
-    .backgroundColor('#317bd4')
-    .width('100%')
-    .height(56)
-    .padding({ left: 20, right: 20 })
-    .justifyContent(FlexAlign.SpaceBetween) //主轴对齐
+    .hideTitleBar(true)
+    .mode(NavigationMode.Stack)
+    .padding({ bottom: px2vp(this.bottomRectHeight) })
+  }
+
+  onPageChange(index: number): void {
+    this.currentIndex = index;
   }
 }
-
-
-
